@@ -1,6 +1,7 @@
 use phf::phf_map;
 use futures::StreamExt;
 use telegram_bot::*;
+use chrono::{DateTime, Duration, Utc, Datelike};
 use std::collections::HashMap;
 use std::vec::Vec;
 use serde::{Deserialize, Serialize};
@@ -28,6 +29,16 @@ static TIME_SLOTS: [&'static str;16] = [
     "10:00PM - 11:00PM",
 ];
 
+static WEEKDAYS: [&'static str;7] = [
+    "星期日",
+    "星期一",
+    "星期二",
+    "星期三",
+    "星期四",
+    "星期五",
+    "星期六",
+];
+
 #[derive(Debug, Serialize, Deserialize)]
 struct RoomsInfoResult {
     data: Vec<RoomsInfo>
@@ -44,14 +55,14 @@ struct RoomsInfo {
 
 #[derive(Debug)]
 struct AvailableRoomsInfo {
-    date: String,
+    date: DateTime<Utc>,
     venue: String,
     time_slot_id: usize,
 }
 
 impl AvailableRoomsInfo {
     fn format_string(&self) -> String {
-        format!("{} - {} - {}", self.date, ROOM_NAMES[self.venue.as_str()], TIME_SLOTS[self.time_slot_id])
+        format!("{} {} {}", ROOM_NAMES[self.venue.as_str()], format!("{}({})", self.date.format("%Y/%m/%d"), WEEKDAYS[self.date.weekday().num_days_from_sunday() as usize]), TIME_SLOTS[self.time_slot_id])
     }
 
     fn format_rooms(rooms: &Vec<AvailableRoomsInfo>) -> String {
@@ -89,7 +100,8 @@ async fn main() -> Result<(), telegram_bot::Error> {
 async fn crawl_data()->Result<Vec<AvailableRoomsInfo>, reqwest::Error> {
     let mut available_rooms = Vec::<AvailableRoomsInfo>::new();
     for i in 1..10 {
-        let date_str = (chrono::Utc::now() + chrono::Duration::days(i)).format("%Y%m%d").to_string();
+        let date = Utc::now() + Duration::days(i);
+        let date_str = (&date).format("%Y%m%d").to_string();
         let url = String::from(format!("http://leisurely-badminton.ddns.net/leisure.ly/results/badminton/v8/date/Rooms.{}.json", date_str.clone()));
         let resp = reqwest::get(url.as_str()).await?;
         let body = resp.text().await?;
@@ -98,7 +110,7 @@ async fn crawl_data()->Result<Vec<AvailableRoomsInfo>, reqwest::Error> {
         for (_, room_info) in result.data.iter().filter(|info| info.venue == "208").enumerate() {
             for (i, _) in room_info.free_courts.iter().filter(|count| count.unwrap_or(0) > 0).enumerate() {
                 let available_room = AvailableRoomsInfo {
-                    date: date_str.clone(),
+                    date,
                     venue: room_info.venue.clone(),
                     time_slot_id: i,
                 };
