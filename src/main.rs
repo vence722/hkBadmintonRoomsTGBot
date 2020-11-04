@@ -86,7 +86,7 @@ async fn main() -> Result<(), telegram_bot::Error> {
         let update = update?;
         if let UpdateKind::Message(ref message) = update.kind {
             if let MessageKind::Text { ref data, ..} =  message.kind {
-                println!("<{}> - {}", message.from.username.as_ref().unwrap_or(&"unknown".to_string()), data);
+                println!("<{}> - {}", message.from.username.as_ref().unwrap_or(&String::from("unknown")), data);
             }
             let available_rooms = crawl_data().await.unwrap();
             bot.send(SendMessage::new(message.chat.id(), AvailableRoomsInfo::format_rooms(&available_rooms))).await?;
@@ -107,7 +107,7 @@ async fn crawl_data()->Result<Vec<AvailableRoomsInfo>, reqwest::Error> {
         let body = resp.text().await?;
         let result: RoomsInfoResult = serde_json::from_str(body.as_str()).unwrap();
 
-        for (_, room_info) in result.data.iter().filter(|info| info.venue == "208").enumerate() {
+        for (_, room_info) in result.data.iter().filter(|info| ROOM_NAMES.contains_key(info.venue.as_str())).enumerate() {
             for (i, _) in room_info.free_courts.iter().filter(|count| count.unwrap_or(0) > 0).enumerate() {
                 let available_room = AvailableRoomsInfo {
                     date,
