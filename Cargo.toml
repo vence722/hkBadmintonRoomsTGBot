@@ -1,0 +1,17 @@
+[package]
+name = "hk_badminton_rooms_tg_bot"
+version = "0.1.0"
+authors = ["Vence Lam <vence722@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = "0.10.8"
+telegram-bot = "0.7.0"
+futures = "0.3.7"
+chrono = "0.4"
+tokio = { version = "0.2.5", features = ["full"] }
+phf = { version = "0.8", features = ["macros"] }
