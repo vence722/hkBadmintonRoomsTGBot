@@ -7,7 +7,7 @@ use std::vec::Vec;
 use serde::{Deserialize, Serialize};
 
 static ROOM_NAMES: phf::Map<&'static str, &'static str> = phf_map! {
-    "208" => "Shuen Wan Stadium"
+    "208" => "上環體育館"
 };
 
 static TIME_SLOTS: [&'static str;16] = [
@@ -66,7 +66,7 @@ impl AvailableRoomsInfo {
     }
 
     fn format_rooms(rooms: &Vec<AvailableRoomsInfo>) -> String {
-        let mut res = String::new();
+        let mut res = String::from("🏸Time to Book場🏸\n\n");
         for room in rooms {
             res.push_str(room.format_string().as_str());
             res.push_str("\n");
